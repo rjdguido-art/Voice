@@ -2,6 +2,13 @@
 
 A Windows-friendly local transcription app using Gradio + OpenAI Whisper.
 
+## Download Windows EXE (GitHub Actions)
+
+1. Open the repo on GitHub and go to **Actions**.
+2. Run workflow **Build Windows EXE** (or push changes under `WhisperUI/` to trigger it).
+3. Open the workflow run and download artifact **WhisperUI-windows-x64**.
+4. Extract the zip and run `WhisperUI.exe`.
+
 ## Project structure
 
 ```text

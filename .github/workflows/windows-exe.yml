@@ -1,0 +1,46 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'WhisperUI/**'
+      - '.github/workflows/windows-exe.yml'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r WhisperUI/requirements.txt
+          pip install pyinstaller
+
+      - name: Build EXE with PyInstaller
+        run: |
+          pyinstaller --noconfirm --clean --name WhisperUI --onedir --windowed --collect-all gradio --collect-all whisper --add-data "WhisperUI/ffmpeg;ffmpeg" WhisperUI/app.py
+
+      - name: Add README to bundle
+        run: |
+          copy WhisperUI\README.md dist\WhisperUI\README.md
+
+      - name: Create zip artifact
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist/WhisperUI/* -DestinationPath WhisperUI-windows-x64.zip -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WhisperUI-windows-x64
+          path: WhisperUI-windows-x64.zip

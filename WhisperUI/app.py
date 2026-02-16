@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -9,9 +10,17 @@ from typing import Dict, Generator, Optional, Tuple
 import gradio as gr
 import whisper
 
-BASE_DIR = Path(__file__).resolve().parent
-DEFAULT_OUTPUT_DIR = BASE_DIR / "outputs"
-FFMPEG_EXE = BASE_DIR / "ffmpeg" / "bin" / "ffmpeg.exe"
+# When running as a bundled executable, keep app data near the .exe
+# while loading bundled resources from PyInstaller's extraction dir.
+if getattr(sys, "frozen", False):
+    APP_DIR = Path(sys.executable).resolve().parent
+    RESOURCE_DIR = Path(getattr(sys, "_MEIPASS", APP_DIR))
+else:
+    APP_DIR = Path(__file__).resolve().parent
+    RESOURCE_DIR = APP_DIR
+
+DEFAULT_OUTPUT_DIR = APP_DIR / "outputs"
+FFMPEG_EXE = RESOURCE_DIR / "ffmpeg" / "bin" / "ffmpeg.exe"
 FFMPEG_BIN_DIR = FFMPEG_EXE.parent
 
 MODEL_CACHE: Dict[Tuple[str, Optional[str]], whisper.Whisper] = {}
@@ -41,7 +50,7 @@ def _resolve_model_cache_dir(model_cache_dir: str) -> Optional[str]:
 
     cache_path = Path(trimmed).expanduser()
     if not cache_path.is_absolute():
-        cache_path = (BASE_DIR / cache_path).resolve()
+        cache_path = (APP_DIR / cache_path).resolve()
     cache_path.mkdir(parents=True, exist_ok=True)
     return str(cache_path)
 
@@ -50,7 +59,7 @@ def _resolve_output_dir(output_dir: str) -> Path:
     trimmed = output_dir.strip()
     target_output_dir = Path(trimmed).expanduser() if trimmed else DEFAULT_OUTPUT_DIR
     if not target_output_dir.is_absolute():
-        target_output_dir = (BASE_DIR / target_output_dir).resolve()
+        target_output_dir = (APP_DIR / target_output_dir).resolve()
     target_output_dir.mkdir(parents=True, exist_ok=True)
     return target_output_dir
 
