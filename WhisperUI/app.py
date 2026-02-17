@@ -143,6 +143,14 @@ def _save_outputs(
     return saved_files
 
 
+def _create_transcript_textbox() -> gr.Textbox:
+    # Some Gradio versions don't support show_copy_button.
+    try:
+        return gr.Textbox(label="Transcription text", lines=12, show_copy_button=True)
+    except TypeError:
+        return gr.Textbox(label="Transcription text", lines=12)
+
+
 def predownload_model(model_name: str, model_cache_dir: str) -> Generator[str, None, None]:
     _configure_ffmpeg_path()
     resolved_model_dir = _resolve_model_cache_dir(model_cache_dir)
@@ -276,7 +284,7 @@ def build_ui() -> gr.Blocks:
             transcribe_btn = gr.Button("Transcribe", variant="primary")
             predownload_btn = gr.Button("Pre-download model")
 
-        transcript_output = gr.Textbox(label="Transcription text", lines=12, show_copy_button=True)
+        transcript_output = _create_transcript_textbox()
         status_output = gr.Textbox(label="Status", lines=10)
 
         transcribe_btn.click(
