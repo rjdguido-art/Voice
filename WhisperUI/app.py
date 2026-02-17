@@ -28,6 +28,19 @@ FFMPEG_EXE = RESOURCE_DIR / "ffmpeg" / "bin" / FFMPEG_EXE_NAME
 FFMPEG_BIN_DIR = FFMPEG_EXE.parent
 
 MODEL_CACHE: Dict[Tuple[str, Optional[str]], whisper.Whisper] = {}
+_DEVNULL_STREAM = None
+
+
+def _ensure_standard_streams() -> None:
+    """Provide stdout/stderr objects for windowed EXE runs where they may be None."""
+    global _DEVNULL_STREAM
+    if sys.stdout is None or sys.stderr is None:
+        if _DEVNULL_STREAM is None:
+            _DEVNULL_STREAM = open(os.devnull, "w", encoding="utf-8")
+        if sys.stdout is None:
+            sys.stdout = _DEVNULL_STREAM
+        if sys.stderr is None:
+            sys.stderr = _DEVNULL_STREAM
 
 
 def _friendly_error(prefix: str, exc: Exception) -> str:
@@ -312,5 +325,6 @@ def build_ui() -> gr.Blocks:
 
 
 if __name__ == "__main__":
+    _ensure_standard_streams()
     app = build_ui()
     app.queue().launch()
