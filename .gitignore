@@ -1,0 +1,17 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+
+# Local virtual environments
+.venv/
+
+# Runtime outputs
+WhisperUI/outputs/
+
+# Build artifacts
+build/
+dist/
+*.spec
+
+# Local editor settings
+.vscode/

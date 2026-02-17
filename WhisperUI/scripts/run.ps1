@@ -11,9 +11,14 @@ if (-not (Test-Path $VenvPython)) {
 
 $FfmpegExe = Join-Path $ProjectRoot "ffmpeg\bin\ffmpeg.exe"
 $FfprobeExe = Join-Path $ProjectRoot "ffmpeg\bin\ffprobe.exe"
-if (-not (Test-Path $FfmpegExe) -or -not (Test-Path $FfprobeExe)) {
-    Write-Warning "ffmpeg.exe and/or ffprobe.exe are missing in .\ffmpeg\bin."
-    Write-Warning "The app can start, but transcription will fail until portable ffmpeg is added."
+$BundledFfmpegReady = (Test-Path $FfmpegExe) -and (Test-Path $FfprobeExe)
+if (-not $BundledFfmpegReady) {
+    $SystemFfmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
+    $SystemFfprobe = Get-Command ffprobe -ErrorAction SilentlyContinue
+    if (-not $SystemFfmpeg -or -not $SystemFfprobe) {
+        Write-Warning "ffmpeg and/or ffprobe were not found."
+        Write-Warning "Add ffmpeg+ffprobe to PATH or place portable binaries in .\ffmpeg\bin."
+    }
 }
 
 & $VenvPython app.py

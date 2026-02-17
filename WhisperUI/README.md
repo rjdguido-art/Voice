@@ -1,13 +1,13 @@
-# WhisperUI
+# Echo by Concentrix
 
 A Windows-friendly local transcription app using Gradio + OpenAI Whisper.
 
 ## Download Windows EXE (GitHub Actions)
 
 1. Open the repo on GitHub and go to **Actions**.
-2. Run workflow **Build Windows EXE** (or push changes under `WhisperUI/` to trigger it).
-3. Open the workflow run and download artifact **WhisperUI-windows-x64**.
-4. Extract the zip and run `WhisperUI.exe`.
+2. Run workflow **Build Echo Windows EXE** (or push changes under `WhisperUI/` to trigger it).
+3. Open the workflow run and download artifact **Echo-windows-x64**.
+4. Extract the zip and run `Echo.exe`.
 
 ## Project structure
 
@@ -33,7 +33,7 @@ WhisperUI/
    ```powershell
    cd .\WhisperUI
    ```
-3. Put portable FFmpeg binaries in:
+3. If FFmpeg is not already on your PATH, put portable FFmpeg binaries in:
    - `.\ffmpeg\bin\ffmpeg.exe`
    - `.\ffmpeg\bin\ffprobe.exe`
 4. Run setup script:
@@ -72,7 +72,7 @@ Processing time is shown in the status panel.
 
 ### "ffmpeg not found"
 
-- If you see an error about missing FFmpeg, place `ffmpeg.exe` at `./ffmpeg/bin/ffmpeg.exe` (and `ffprobe.exe` at `./ffmpeg/bin/ffprobe.exe`).
+- If you see an error about missing FFmpeg, either add `ffmpeg` + `ffprobe` to PATH, or place portable binaries at `./ffmpeg/bin/ffmpeg.exe` and `./ffmpeg/bin/ffprobe.exe`.
 - Confirm these files exist:
   - `.\ffmpeg\bin\ffmpeg.exe`
   - `.\ffmpeg\bin\ffprobe.exe`
@@ -90,6 +90,6 @@ Processing time is shown in the status panel.
 
 ### PATH notes
 
-- You do **not** need admin rights or system-wide PATH changes.
-- `app.py` prepends `.\ffmpeg\bin` to PATH at runtime when `ffmpeg.exe` is present.
+- You can use either system FFmpeg on PATH or portable FFmpeg in `.\ffmpeg\bin`.
+- `app.py` prepends `.\ffmpeg\bin` to PATH at runtime when bundled FFmpeg is present.
 - Scripts call `.\.venv\Scripts\python.exe` explicitly, so PowerShell execution policy restrictions on `Activate.ps1` do not block usage.

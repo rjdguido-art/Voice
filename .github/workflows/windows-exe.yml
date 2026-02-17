@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: Build Echo Windows EXE
 
 on:
   workflow_dispatch:
@@ -19,6 +19,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
@@ -28,19 +29,19 @@ jobs:
 
       - name: Build EXE with PyInstaller
         run: |
-          pyinstaller --noconfirm --clean --name WhisperUI --onedir --windowed --collect-all gradio --collect-all whisper --add-data "WhisperUI/ffmpeg;ffmpeg" WhisperUI/app.py
+          pyinstaller --noconfirm --clean --name Echo --onedir --windowed --collect-all gradio --collect-all safehttpx --collect-all whisper --add-data "WhisperUI/ffmpeg;ffmpeg" WhisperUI/app.py
 
       - name: Add README to bundle
         run: |
-          copy WhisperUI\README.md dist\WhisperUI\README.md
+          copy WhisperUI\README.md dist\Echo\README.md
 
       - name: Create zip artifact
         shell: pwsh
         run: |
-          Compress-Archive -Path dist/WhisperUI/* -DestinationPath WhisperUI-windows-x64.zip -Force
+          Compress-Archive -Path dist/Echo/* -DestinationPath Echo-windows-x64.zip -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: WhisperUI-windows-x64
-          path: WhisperUI-windows-x64.zip
+          name: Echo-windows-x64
+          path: Echo-windows-x64.zip

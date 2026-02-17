@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import sys
 import time
 from datetime import datetime
@@ -19,8 +20,11 @@ else:
     APP_DIR = Path(__file__).resolve().parent
     RESOURCE_DIR = APP_DIR
 
+APP_TITLE = "Echo by Concentrix"
+DEFAULT_LANGUAGE = "es"
 DEFAULT_OUTPUT_DIR = APP_DIR / "outputs"
-FFMPEG_EXE = RESOURCE_DIR / "ffmpeg" / "bin" / "ffmpeg.exe"
+FFMPEG_EXE_NAME = "ffmpeg.exe" if os.name == "nt" else "ffmpeg"
+FFMPEG_EXE = RESOURCE_DIR / "ffmpeg" / "bin" / FFMPEG_EXE_NAME
 FFMPEG_BIN_DIR = FFMPEG_EXE.parent
 
 MODEL_CACHE: Dict[Tuple[str, Optional[str]], whisper.Whisper] = {}
@@ -32,15 +36,21 @@ def _friendly_error(prefix: str, exc: Exception) -> str:
 
 
 def _configure_ffmpeg_path() -> None:
-    """Add portable ffmpeg folder to PATH when ffmpeg.exe exists there."""
+    """Add portable ffmpeg folder to PATH when a bundled ffmpeg binary exists there."""
     if not FFMPEG_EXE.exists():
         return
 
     ffmpeg_path = str(FFMPEG_BIN_DIR)
     current_path = os.environ.get("PATH", "")
     parts = current_path.split(os.pathsep) if current_path else []
-    if ffmpeg_path not in parts:
+    normalized = {os.path.normcase(os.path.normpath(part)) for part in parts if part}
+    normalized_ffmpeg_path = os.path.normcase(os.path.normpath(ffmpeg_path))
+    if normalized_ffmpeg_path not in normalized:
         os.environ["PATH"] = ffmpeg_path + (os.pathsep + current_path if current_path else "")
+
+
+def _is_ffmpeg_available() -> bool:
+    return FFMPEG_EXE.exists() or shutil.which("ffmpeg") is not None
 
 
 def _resolve_model_cache_dir(model_cache_dir: str) -> Optional[str]:
@@ -72,7 +82,7 @@ def _get_model(model_name: str, model_cache_dir: Optional[str]):
 
 
 def _format_timestamp(seconds: float, always_include_hours: bool = False, decimal_marker: str = ".") -> str:
-    milliseconds = int(seconds * 1000)
+    milliseconds = max(0, int(round(seconds * 1000)))
     hours = milliseconds // 3_600_000
     milliseconds -= hours * 3_600_000
     minutes = milliseconds // 60_000
@@ -124,8 +134,11 @@ def _save_outputs(
     extensions = ["txt", "srt", "vtt"] if output_format == "all" else [output_format]
     saved_files: list[Path] = []
     for ext in extensions:
+        content = contents_by_ext.get(ext)
+        if content is None:
+            raise ValueError(f"Unsupported output format: {output_format}")
         output_file = target_output_dir / f"{source_stem}_{timestamp}.{ext}"
-        output_file.write_text(contents_by_ext[ext], encoding="utf-8")
+        output_file.write_text(content, encoding="utf-8")
         saved_files.append(output_file)
     return saved_files
 
@@ -174,11 +187,11 @@ def transcribe(
         yield "", f"Audio file not found: {audio_file}"
         return
 
-    if not FFMPEG_EXE.exists():
-        yield "", "ffmpeg.exe not found. Place it at ./ffmpeg/bin/ffmpeg.exe and try again."
-        return
-
     _configure_ffmpeg_path()
+    if not _is_ffmpeg_available():
+        ffmpeg_hint = RESOURCE_DIR / "ffmpeg" / "bin" / FFMPEG_EXE_NAME
+        yield "", f"ffmpeg not found. Add ffmpeg to PATH or place it at: {ffmpeg_hint}"
+        return
 
     try:
         target_output_dir = _resolve_output_dir(output_dir)
@@ -192,7 +205,7 @@ def transcribe(
         yield "", _friendly_error("Could not prepare model cache directory", exc)
         return
 
-    selected_language: Optional[str] = None if auto_detect_language else language.strip() or "es"
+    selected_language: Optional[str] = None if auto_detect_language else language.strip() or DEFAULT_LANGUAGE
 
     status = [f"Loading model '{model_name}'..."]
     if resolved_model_dir:
@@ -234,8 +247,8 @@ def transcribe(
 
 
 def build_ui() -> gr.Blocks:
-    with gr.Blocks(title="WhisperUI") as demo:
-        gr.Markdown("# WhisperUI\nOffline local transcription with OpenAI Whisper.")
+    with gr.Blocks(title=APP_TITLE) as demo:
+        gr.Markdown(f"# {APP_TITLE}\nOffline local transcription with OpenAI Whisper.")
 
         audio_input = gr.Audio(label="Audio file", type="filepath")
 
@@ -252,7 +265,7 @@ def build_ui() -> gr.Blocks:
             )
 
         with gr.Row():
-            language_input = gr.Textbox(value="es", label="Language")
+            language_input = gr.Textbox(value=DEFAULT_LANGUAGE, label="Language")
             auto_detect_input = gr.Checkbox(value=False, label="Auto-detect language")
             word_timestamps_input = gr.Checkbox(value=False, label="Word timestamps")
 
