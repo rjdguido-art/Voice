@@ -29,7 +29,7 @@ jobs:
 
       - name: Build EXE with PyInstaller
         run: |
-          pyinstaller --noconfirm --clean --name Echo --onedir --windowed --collect-all gradio --collect-all safehttpx --collect-all whisper --add-data "WhisperUI/ffmpeg;ffmpeg" WhisperUI/app.py
+          pyinstaller --noconfirm --clean --name Echo --onedir --windowed --collect-all gradio --collect-all groovy --collect-all safehttpx --collect-all whisper --add-data "WhisperUI/ffmpeg;ffmpeg" WhisperUI/app.py
 
       - name: Add README to bundle
         run: |
